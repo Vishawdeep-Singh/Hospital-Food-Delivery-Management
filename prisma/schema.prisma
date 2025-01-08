@@ -20,7 +20,84 @@ model User {
   name      String
   role      Role  // manager, staff, delivery
   createdAt DateTime @default(now())
+  contact   String
   updatedAt DateTime @updatedAt
+  pantries PantryOnUser[]
+}
+
+model Patient {
+  id        Int     @id @default(autoincrement())
+  name      String
+  age       Int
+  gender    String
+  room      String
+  bed       String
+  floor     Int
+  contact   String
+  emergencyContact String
+  allergies            Allergy[]
+  diseases             Disease[]
+  dietaryRestrictions  DietaryRestriction[]
+  dietCharts           DietChart[]
+}
+
+model DietChart {
+  id        Int     @id @default(autoincrement())
+  patientId Int
+  patient   Patient @relation(fields: [patientId], references: [id])
+  morning   Meal     @relation("MorningMeal", fields: [morningId], references: [id])
+  morningId Int
+  evening      Meal     @relation("EveningMeal", fields: [eveningId], references: [id])
+  eveningId    Int
+  night        Meal     @relation("NightMeal", fields: [nightId], references: [id])
+  nightId      Int
+  instructions String?
+}
+
+
+model Meal {
+  id          Int       @id @default(autoincrement())
+  name        String    
+  ingredients String   
+  dietCharts  DietChart[] @relation("MorningMeal") 
+  dietCharts2 DietChart[] @relation("EveningMeal")   
+  dietCharts3 DietChart[] @relation("NightMeal")     
+}
+
+model Allergy {
+  id       Int    @id @default(autoincrement())
+  name     String
+  patient  Patient @relation(fields: [patientId], references: [id])
+  patientId Int
+}
+
+model Disease {
+  id       Int    @id @default(autoincrement())
+  name     String
+  patient  Patient @relation(fields: [patientId], references: [id])
+  patientId Int
+}
+
+model DietaryRestriction {
+  id       Int    @id @default(autoincrement())
+  name     String
+  patient  Patient @relation(fields: [patientId], references: [id])
+  patientId Int
+}
+
+model Pantry {
+  id        Int     @id @default(autoincrement())
+  name      String
+ location String
+  staff PantryOnUser[]
+}
+
+model PantryOnUser {
+  userId   Int
+  pantryId Int
+  user     User   @relation(fields: [userId], references: [id])
+  pantry   Pantry @relation(fields: [pantryId], references: [id])
+  @@id([userId, pantryId])
 }
 
 enum Role {
