@@ -23,6 +23,7 @@ model User {
   contact   String
   updatedAt DateTime @updatedAt
   pantries PantryOnUser[]
+   mealPreparations FoodPreparationTracker[]
 }
 
 model Patient {
@@ -39,30 +40,39 @@ model Patient {
   diseases             Disease[]
   dietaryRestrictions  DietaryRestriction[]
   dietCharts           DietChart[]
+  mealLogs             MealLog[]
+  FoodPreparationTracker FoodPreparationTracker[]
 }
+
+model MealLog {
+  id          Int      @id @default(autoincrement())
+  patientId   Int
+  patient     Patient  @relation(fields: [patientId], references: [id])
+  date        DateTime @default(now())
+  breakfast   Boolean  @default(false) 
+  lunch       Boolean  @default(false) 
+  dinner      Boolean  @default(false) 
+  servedBy    String?  
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
 
 model DietChart {
-  id        Int     @id @default(autoincrement())
-  patientId Int
-  patient   Patient @relation(fields: [patientId], references: [id])
-  morning   Meal     @relation("MorningMeal", fields: [morningId], references: [id])
-  morningId Int
-  evening      Meal     @relation("EveningMeal", fields: [eveningId], references: [id])
-  eveningId    Int
-  night        Meal     @relation("NightMeal", fields: [nightId], references: [id])
-  nightId      Int
-  instructions String?
+  id            Int      @id @default(autoincrement())
+  patientId     Int
+  patient       Patient   @relation(fields: [patientId], references: [id])
+  morningName   String
+  morningIngredients String
+  eveningName   String
+  eveningIngredients String
+  nightName     String
+  nightIngredients String
+  createdAt     DateTime @default(now())
+  instructions  String?
+  foodPreparations     FoodPreparationTracker[]
 }
 
-
-model Meal {
-  id          Int       @id @default(autoincrement())
-  name        String    
-  ingredients String   
-  dietCharts  DietChart[] @relation("MorningMeal") 
-  dietCharts2 DietChart[] @relation("EveningMeal")   
-  dietCharts3 DietChart[] @relation("NightMeal")     
-}
 
 model Allergy {
   id       Int    @id @default(autoincrement())
@@ -98,6 +108,28 @@ model PantryOnUser {
   user     User   @relation(fields: [userId], references: [id])
   pantry   Pantry @relation(fields: [pantryId], references: [id])
   @@id([userId, pantryId])
+}
+
+model FoodPreparationTracker {
+  id              Int          @id @default(autoincrement())
+  status          PrepStatus   @default(NOT_STARTED)
+  startTime       DateTime?    
+  endTime         DateTime?    
+  staffId         Int
+  staff           User         @relation(fields: [staffId], references: [id])
+  patientId       Int
+  patient         Patient      @relation(fields: [patientId], references: [id])
+  dietChartId     Int
+  dietChart       DietChart    @relation(fields: [dietChartId], references: [id])
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+
+enum PrepStatus {
+  NOT_STARTED
+  IN_PROGRESS
+  FINISHED
 }
 
 enum Role {

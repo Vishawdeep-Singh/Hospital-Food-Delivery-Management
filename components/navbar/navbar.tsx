@@ -1,6 +1,8 @@
+'use client';
 import { Bell } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { signOut } from 'next-auth/react';
 
 export const Navbar = () => {
   return (
@@ -12,7 +14,7 @@ export const Navbar = () => {
         <Button variant={'ghost'} size="icon">
           <Bell className="h-6 w-6" />
         </Button>
-        <Avatar>
+        <Avatar onClick={async () => await signOut()}>
           <AvatarImage src="https://github.com/shadcn.png" />
           <AvatarFallback>CN</AvatarFallback>
         </Avatar>

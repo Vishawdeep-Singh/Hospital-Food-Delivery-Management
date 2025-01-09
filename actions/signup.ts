@@ -7,6 +7,7 @@ import bcrypt from 'bcrypt';
 export const signUp = async (
   name: string,
   email: string,
+  contact: string,
   password: string,
   role: string
 ) => {
@@ -34,6 +35,7 @@ export const signUp = async (
         email,
         password: hashedPassword,
         role: Role[role as keyof typeof Role],
+        contact,
       },
     });
 

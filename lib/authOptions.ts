@@ -3,7 +3,6 @@ import bcrypt from 'bcrypt';
 import GoogleProvider from 'next-auth/providers/google';
 import { NextAuthOptions } from 'next-auth';
 import prisma from '@/lib/db';
-import { toast } from 'sonner';
 
 export const authOptions: NextAuthOptions = {
   providers: [
@@ -18,64 +17,61 @@ export const authOptions: NextAuthOptions = {
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials: any) {
+        if (!credentials?.email || !credentials?.password) {
+          return null;
+        }
+
         const existingUser = await prisma.user.findFirst({
           where: {
-            email: credentials?.email,
+            email: credentials.email,
           },
         });
 
-        if (existingUser) {
-          const passwordValidation = await bcrypt.compare(
-            credentials.password,
-            existingUser.password as string
-          );
-          if (passwordValidation) {
-            return {
-              id: existingUser.id.toString(),
-              name: existingUser.name,
-              email: existingUser.email,
-              role: existingUser.role,
-            };
-          }
+        if (!existingUser) {
+          return null;
         }
 
-        return null;
+        const passwordValidation = await bcrypt.compare(
+          credentials.password,
+          existingUser.password as string
+        );
+
+        if (!passwordValidation) {
+          return null;
+        }
+
+        return {
+          id: existingUser.id.toString(),
+          name: existingUser.name,
+          email: existingUser.email,
+          role: existingUser.role,
+        };
       },
     }),
   ],
-  cookies: {
-    sessionToken: {
-      name: 'Nourish360.session-token',
-      options: {
-        path: '/',
-        httpOnly: true,
-        sameSite: 'lax', // Adjust as per your app's requirements
-        secure: process.env.NODE_ENV === 'production', // Secure in production
-      },
-    },
-  },
 
   secret: process.env.JWT_SECRET || 'secret',
+
   session: {
     strategy: 'jwt',
+    maxAge: 30 * 24 * 60 * 60, // 30 days
   },
 
   callbacks: {
-    async jwt({ token, user, account, profile, isNewUser, trigger, session }) {
-      token.sub = user.id;
-      token.name = user.name;
-      token.email = user.email;
-      token.role = user.role;
+    async jwt({ token, user }) {
+      if (user) {
+        // Only update token if user exists (during sign in)
+        token.sub = user.id;
+        token.role = user.role;
+      }
       return token;
     },
-    async session({ session, token, user }) {
-      session.user = {
-        id: token.sub as string,
-        name: token.name as string,
-        email: token.email as string,
-        role: token.role as string,
-      };
-
+    async session({ session, token }) {
+      if (session.user) {
+        // Add custom properties to session
+        session.user.id = token.sub as string;
+        session.user.role = token.role as string;
+      }
       return session;
     },
   },
